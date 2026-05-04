@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../lib/store';
+import React, { useState } from 'react';
+import { useAppStore } from '../lib/store';
 import { Button, Input, Card } from '../components/ui';
 import { useNavigate } from 'react-router-dom';
 
 export default function TransactionForm() {
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const allCustomers = useAppStore(state => state.customers);
+  const allProducts = useAppStore(state => state.products);
+  const addTransaction = useAppStore(state => state.addTransaction);
+
+  const customers = allCustomers;
+  const products = allProducts.filter(p => p.is_active);
+
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -15,11 +20,6 @@ export default function TransactionForm() {
   });
   
   const [cart, setCart] = useState<{product_id: string, qty: number}[]>([]);
-
-  useEffect(() => {
-     api.get('/customers').then(res => setCustomers(res.data));
-     api.get('/products').then(res => setProducts(res.data.filter((p: any) => p.is_active)));
-  }, []);
 
   const totalAmount = cart.reduce((sum, item) => {
       const p = products.find(p => p.id === item.product_id);
@@ -34,12 +34,14 @@ export default function TransactionForm() {
           const payload = {
               ...form,
               total_amount: totalAmount,
-              details: cart.map(c => {
-                  const p = products.find(p => p.id === c.product_id);
-                  return { product_id: c.product_id, quantity: c.qty, price: p?.price, subtotal: (p?.price || 0) * c.qty };
-              })
+              transaction_date: new Date().toISOString()
           };
-          await api.post('/transactions', payload);
+          const details = cart.map(c => {
+               const p = products.find(p => p.id === c.product_id);
+               return { product_id: c.product_id, quantity: c.qty, price: p?.price, subtotal: (p?.price || 0) * c.qty };
+          });
+          
+          addTransaction(payload, details);
           alert('Transaksi berhasil disimpan!');
           navigate('/transactions');
       } catch (err) {

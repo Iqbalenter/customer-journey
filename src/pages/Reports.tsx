@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../lib/store';
+import React from 'react';
+import { useAppStore } from '../lib/store';
 import { Card, Button } from '../components/ui';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export default function Reports() {
-    const [transactions, setTransactions] = useState([]);
-    
-    useEffect(() => {
-        api.get('/transactions').then(res => setTransactions(res.data));
-    }, []);
+    const transactions = useAppStore(state => state.transactions);
 
     const mockTrendData = [
         {name: 'W1', trx: 12},

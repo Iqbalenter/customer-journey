@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore, api } from '../lib/store';
+import { useAppStore } from '../lib/store';
 import { Button, Input, Card } from '../components/ui';
 import { Coffee } from 'lucide-react';
 
@@ -9,22 +9,26 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const login = useAuthStore(state => state.login);
+  const login = useAppStore(state => state.login);
+  const users = useAppStore(state => state.users);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    try {
-      const response = await api.post('/login', { email, password });
-      login(response.data.user, response.data.token);
-      navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
-    } finally {
+    
+    // Simulate network delay
+    setTimeout(() => {
+      const user = users.find(u => u.email === email && u.password === password);
+      if (user) {
+        login(user, user.email);
+        navigate('/');
+      } else {
+        setError('Invalid credentials');
+      }
       setLoading(false);
-    }
+    }, 500);
   };
 
   return (

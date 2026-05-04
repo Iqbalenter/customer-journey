@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { api, useAuthStore } from '../lib/store';
+import React, { useState } from 'react';
+import { useAppStore } from '../lib/store';
 import { Card, Button, Input } from '../components/ui';
 import { Star, AlertTriangle, Trash, Edit, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Feedbacks() {
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const user = useAuthStore(s => s.user);
+  const feedbacks = useAppStore(state => state.feedbacks);
+  const customers = useAppStore(state => state.customers);
+  const updateFeedback = useAppStore(state => state.updateFeedback);
+  const deleteFeedback = useAppStore(state => state.deleteFeedback);
+  const user = useAppStore(s => s.user);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -18,18 +20,6 @@ export default function Feedbacks() {
       comment: '',
       is_pain_point: false
   });
-
-  const fetchData = () => {
-    Promise.all([api.get('/feedbacks'), api.get('/customers')])
-      .then(([fRes, cRes]) => {
-          setFeedbacks(fRes.data);
-          setCustomers(cRes.data);
-      });
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const getCustomerName = (id: string) => customers.find(c => c.id === id)?.customer_name || 'Unknown';
 
@@ -49,10 +39,9 @@ export default function Feedbacks() {
       e.preventDefault();
       try {
           if (editingId) {
-              await api.put(`/feedbacks/${editingId}`, form);
+              updateFeedback(editingId, form);
           }
           setIsModalOpen(false);
-          fetchData();
           setEditingId(null);
       } catch (error) {
           alert("Gagal menyimpan data feedback");
@@ -62,8 +51,7 @@ export default function Feedbacks() {
   const handleDelete = async (id: string) => {
       if (confirm('Yakin ingin menghapus feedback ini?')) {
           try {
-              await api.delete(`/feedbacks/${id}`);
-              fetchData();
+              deleteFeedback(id);
           } catch (error) {
               alert('Gagal menghapus');
           }

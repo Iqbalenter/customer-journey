@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../lib/store';
+import React from 'react';
+import { useAppStore } from '../lib/store';
 import { Card } from '../components/ui';
 import { AlertTriangle, Lightbulb, Users } from 'lucide-react';
 
@@ -13,11 +13,7 @@ const STAGES = [
 ];
 
 export default function CJM() {
-    const [feedbacks, setFeedbacks] = useState<any[]>([]);
-
-    useEffect(() => {
-        api.get('/feedbacks').then(res => setFeedbacks(res.data));
-    }, []);
+    const feedbacks = useAppStore(state => state.feedbacks);
 
     const getStageData = (stageId: string) => {
         const stageFeedbacks = feedbacks.filter(f => f.journey_stage === stageId);

@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { api, useAuthStore } from '../lib/store';
+import React from 'react';
+import { useAppStore } from '../lib/store';
 import { Card } from '../components/ui';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
 export default function Segmentation() {
-    const [customers, setCustomers] = useState<any[]>([]);
-
-    useEffect(() => {
-        api.get('/customers').then(res => setCustomers(res.data));
-    }, []);
+    const customers = useAppStore(state => state.customers);
 
     const segments = {
         'Baru': { count: 0, color: '#2196F3', desc: 'Pelanggan baru transaksi pertama' },

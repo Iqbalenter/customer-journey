@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --platform=node --target=node22 --outfile=dist/server.cjs --bundle --external:express --external:vite --format=cjs",
-    "start": "node dist/server.cjs",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "serve -s dist",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
@@ -26,6 +26,7 @@
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.14.2",
     "recharts": "^3.8.1",
+    "serve": "^14.2.6",
     "tailwind-merge": "^3.5.0",
     "uuid": "^14.0.0",
     "vite": "^6.2.3",

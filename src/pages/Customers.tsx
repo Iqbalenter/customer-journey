@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { api, useAuthStore } from '../lib/store';
+import React, { useState } from 'react';
+import { useAppStore } from '../lib/store';
 import { Button, Input, Card } from '../components/ui';
 import { Plus, Search, Edit, Trash, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Customers() {
-  const [customers, setCustomers] = useState([]);
+  const customers = useAppStore(state => state.customers);
+  const addCustomer = useAppStore(state => state.addCustomer);
+  const updateCustomer = useAppStore(state => state.updateCustomer);
+  const deleteCustomer = useAppStore(state => state.deleteCustomer);
+
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -18,25 +22,15 @@ export default function Customers() {
       notes: ''
   });
 
-  const fetchData = async () => {
-    const res = await api.get('/customers');
-    setCustomers(res.data);
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
           if (editingId) {
-              await api.put(`/customers/${editingId}`, form);
+              updateCustomer(editingId, form);
           } else {
-              await api.post('/customers', form);
+              addCustomer(form);
           }
           setIsModalOpen(false);
-          fetchData();
           setForm({ customer_name: '', phone: '', email: '', address: '', notes: '' });
           setEditingId(null);
       } catch (error) {
@@ -59,8 +53,7 @@ export default function Customers() {
   const handleDelete = async (id: string) => {
       if (confirm('Yakin ingin menghapus pelanggan ini?')) {
           try {
-              await api.delete(`/customers/${id}`);
-              fetchData();
+              deleteCustomer(id);
           } catch (error) {
               alert('Gagal menghapus');
           }

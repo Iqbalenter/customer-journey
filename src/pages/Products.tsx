@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { api, useAuthStore } from '../lib/store';
+import React, { useState } from 'react';
+import { useAppStore } from '../lib/store';
 import { Button, Input, Card } from '../components/ui';
 import { Plus, Search, Edit, Trash, X } from 'lucide-react';
 
 export default function Products() {
-  const [products, setProducts] = useState([]);
+  const products = useAppStore(state => state.products);
+  const addProduct = useAppStore(state => state.addProduct);
+  const updateProduct = useAppStore(state => state.updateProduct);
+  const deleteProduct = useAppStore(state => state.deleteProduct);
+
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const user = useAuthStore(s => s.user);
+  const user = useAppStore(s => s.user);
 
   const [form, setForm] = useState({
       product_name: '',
@@ -18,26 +22,16 @@ export default function Products() {
       is_active: true
   });
 
-  const fetchData = async () => {
-    const res = await api.get('/products');
-    setProducts(res.data);
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
           const payload = { ...form, price: Number(form.price) };
           if (editingId) {
-              await api.put(`/products/${editingId}`, payload);
+              updateProduct(editingId, payload);
           } else {
-              await api.post('/products', payload);
+              addProduct(payload);
           }
           setIsModalOpen(false);
-          fetchData();
           setForm({ product_name: '', category: 'Coffee', price: '', description: '', is_active: true });
           setEditingId(null);
       } catch (error) {
@@ -60,8 +54,7 @@ export default function Products() {
   const handleDelete = async (id: string) => {
       if (confirm('Yakin ingin menghapus produk ini?')) {
           try {
-              await api.delete(`/products/${id}`);
-              fetchData();
+              deleteProduct(id);
           } catch (error) {
               alert('Gagal menghapus');
           }

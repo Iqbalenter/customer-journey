@@ -1,29 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import { useAuthStore, api } from '../lib/store';
+import React from 'react';
+import { useAppStore } from '../lib/store';
 import { Card } from '../components/ui';
 import { Users, ShoppingCart, MessageSquare, Star, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function Dashboard() {
-  const user = useAuthStore(state => state.user);
-  const [stats, setStats] = useState<any>({ total_customers: 0, total_transactions: 0, total_feedbacks: 0, avg_rating: 0, loyalty_score: 0 });
-  const [loading, setLoading] = useState(true);
+  const user = useAppStore(state => state.user);
+  const customers = useAppStore(state => state.customers);
+  const transactions = useAppStore(state => state.transactions);
+  const feedbacks = useAppStore(state => state.feedbacks);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await api.get('/dashboard');
-        setStats(res.data);
-      } catch (error) {
-        console.error("Failed to fetch stats", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  let sumLoyalty = 0;
+  customers.forEach(customer => {
+      const custTx = transactions.filter(t => t.customer_id === customer.id);
+      const custFb = feedbacks.filter(f => f.customer_id === customer.id);
+      
+      const total_transactions = custTx.length;
+      const avg_rating = custFb.length > 0 ? custFb.reduce((a: number, b: any) => a + b.rating, 0) / custFb.length : 0;
+      
+      const repeat_purchase_score = Math.min(total_transactions * 10, 100); 
+      const rating_score = (avg_rating / 5) * 100;
+      const feedback_score = Math.min(custFb.length * 33, 100);
 
-  if (loading) return <div className="space-y-4 animate-pulse"><div className="h-32 bg-gray-200 rounded-lg"></div></div>;
+      const loyalty_score = (0.4 * repeat_purchase_score) + (0.4 * rating_score) + (0.2 * feedback_score);
+      sumLoyalty += loyalty_score;
+  });
+
+  const stats = {
+      total_customers: customers.length,
+      total_transactions: transactions.length,
+      total_feedbacks: feedbacks.length,
+      avg_rating: feedbacks.length > 0 ? (feedbacks.reduce((a: number, b: any) => a + b.rating, 0) / feedbacks.length).toFixed(1) : 0,
+      loyalty_score: customers.length > 0 ? (sumLoyalty / customers.length).toFixed(1) : 0
+  };
 
   const mockChartData = [
     { name: 'Jan', sales: 4000 },

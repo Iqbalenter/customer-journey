@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../lib/store';
+import React, { useState } from 'react';
+import { useAppStore } from '../lib/store';
 import { Button, Input, Card } from '../components/ui';
 import { Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function FeedbackForm() {
-    const [customers, setCustomers] = useState<any[]>([]);
-    const [products, setProducts] = useState<any[]>([]);
+    const customers = useAppStore(state => state.customers);
+    const products = useAppStore(state => state.products);
+    const addFeedback = useAppStore(state => state.addFeedback);
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -18,15 +19,10 @@ export default function FeedbackForm() {
         journey_stage: 'Experience'
     });
 
-    useEffect(() => {
-        api.get('/customers').then(res => setCustomers(res.data));
-        api.get('/products').then(res => setProducts(res.data));
-    }, []);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/feedbacks', form);
+            addFeedback({ ...form, created_at: new Date().toISOString() });
             alert('Feedback berhasil disimpan');
             navigate('/feedbacks');
         } catch (error) {

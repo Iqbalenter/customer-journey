@@ -1,33 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { api, useAuthStore } from '../lib/store';
+import React from 'react';
+import { useAppStore } from '../lib/store';
 import { Card } from '../components/ui';
 import { format } from 'date-fns';
 import { Trash } from 'lucide-react';
 
 export default function Transactions() {
-  const [transactions, setTransactions] = useState([]);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const user = useAuthStore(s => s.user);
-
-  const fetchData = () => {
-      Promise.all([api.get('/transactions'), api.get('/customers')])
-      .then(([txRes, custRes]) => {
-          setTransactions(txRes.data);
-          setCustomers(custRes.data);
-      });
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const transactions = useAppStore(state => state.transactions);
+  const customers = useAppStore(state => state.customers);
+  const deleteTransaction = useAppStore(state => state.deleteTransaction);
+  const user = useAppStore(s => s.user);
 
   const getCustomerName = (id: string) => customers.find(c => c.id === id)?.customer_name || 'Unknown';
 
   const handleDelete = async (id: string) => {
       if (confirm('Yakin ingin menghapus transaksi ini?')) {
           try {
-              await api.delete(`/transactions/${id}`);
-              fetchData();
+              deleteTransaction(id);
           } catch (error) {
               alert('Gagal menghapus');
           }
